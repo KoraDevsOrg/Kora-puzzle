@@ -30,7 +30,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const mode = document.getElementById('game-mode').value;
         const size = parseInt(document.getElementById('grid-size').value, 10);
 
-        // Cambiar de vista en el DOM sin cambiar la URL de GitHub Pages
         document.getElementById('view-menu').classList.add('hidden');
         document.getElementById('view-game').classList.remove('hidden');
 
@@ -89,6 +88,7 @@ function renderBoard(board, pieces, size, imgSrc) {
     document.getElementById('move-count').textContent = moves;
 
     let selectedTile = null;
+    const divisor = size > 1 ? size - 1 : 1;
 
     pieces.forEach((originalIndex, currentIndex) => {
         const tile = document.createElement('div');
@@ -96,16 +96,15 @@ function renderBoard(board, pieces, size, imgSrc) {
         tile.dataset.current = currentIndex;
         tile.dataset.original = originalIndex;
 
-        const x = (originalIndex % size) * (100 / (size - 1 || 1));
-        const y = Math.floor(originalIndex / size) * (100 / (size - 1 || 1));
+        const col = originalIndex % size;
+        const row = Math.floor(originalIndex / size);
+
+        const x = (col * 100) / divisor;
+        const y = (row * 100) / divisor;
 
         tile.style.backgroundImage = `url(${imgSrc})`;
         tile.style.backgroundSize = `${size * 100}% ${size * 100}%`;
         tile.style.backgroundPosition = `${x}% ${y}%`;
-        tile.style.cursor = 'pointer';
-        tile.style.border = '1px solid rgba(255,255,255,0.2)';
-        tile.style.transition = 'transform 0.15s, border-color 0.15s';
-        tile.style.minHeight = '60px';
 
         tile.addEventListener('click', () => {
             if (!selectedTile) {
