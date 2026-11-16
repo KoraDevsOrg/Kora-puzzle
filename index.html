@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KoraPuzzle Studio - Pro</title>
+    <title>KoraPuzzle Studio - Jigsaw Pro</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -12,24 +12,24 @@
         <section id="view-menu" class="screen">
             <header>
                 <h1>🧩 KoraPuzzle Studio</h1>
-                <p>Elige tu estilo de rompecabezas</p>
+                <p>Elige tu estilo de rompecabezas por ensamblaje</p>
             </header>
 
             <div class="menu-card">
                 <div class="form-group">
                     <label for="game-mode">Tipo de Rompecabezas:</label>
                     <select id="game-mode">
-                        <option value="modern">Moderno (Bloques Irregulares / Poliminós - Drag & Drop)</option>
-                        <option value="classic">Clásico (Jigsaw Deslizante de Caja)</option>
+                        <option value="classic">Clásico (Jigsaw Tradicional - Celdas Cuadradas)</option>
+                        <option value="modern">Moderno (Estilo Tetris / Dominó - Bloques Irregulares)</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label for="grid-size">Dificultad:</label>
+                    <label for="grid-size">Dificultad / Piezas:</label>
                     <select id="grid-size">
-                        <option value="3">3 x 3 (Fácil)</option>
-                        <option value="4" selected>4 x 4 (Normal)</option>
-                        <option value="5">5 x 5 (Desafío)</option>
+                        <option value="3">3 x 3 (9 Piezas - Fácil)</option>
+                        <option value="4" selected>4 x 4 (16 Piezas - Normal)</option>
+                        <option value="5">5 x 5 (25 Piezas - Desafío)</option>
                     </select>
                 </div>
 
@@ -53,22 +53,27 @@
             <div class="game-header">
                 <button class="btn-back" id="back-to-menu-btn">⬅ Menú</button>
                 <div class="stats">
-                    <span>Movs: <strong id="move-count">0</strong></span>
+                    <span>Colocadas: <strong id="score-count">0</strong>/<span id="total-target">16</span></span>
                     <span>Tiempo: <strong id="timer">00:00</strong></span>
                 </div>
             </div>
 
-            <main class="puzzle-wrapper">
+            <div class="game-workspace">
+                <!-- Tablero de destino (Celdas donde deben encajar) -->
                 <div id="puzzle-board" class="puzzle-board"></div>
-            </main>
+
+                <!-- Bandeja de piezas desordenadas para arrastrar -->
+                <div class="tray-title">Piezas disponibles (Arrastra al tablero):</div>
+                <div id="puzzle-tray" class="puzzle-tray"></div>
+            </div>
         </section>
     </div>
 
     <!-- MODAL DE VICTORIA -->
     <div id="win-modal" class="modal hidden">
         <div class="modal-content">
-            <h2>🎉 ¡Excelente Trabajo!</h2>
-            <p>Has completado el rompecabezas con éxito.</p>
+            <h2>🎉 ¡Increíble Trabajo!</h2>
+            <p>Has ensamblado el rompecabezas con éxito.</p>
             <button class="btn-primary" id="play-again-btn">Jugar de Nuevo</button>
         </div>
     </div>
