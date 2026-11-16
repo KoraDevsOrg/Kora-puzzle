@@ -1,10 +1,55 @@
-const STORAGE_IMG = 'kora_puzzle_image';
-const STORAGE_SIZE = 'kora_puzzle_size';
-
 let moves = 0;
 let timerSeconds = 0;
 let timerInterval = null;
-let isPlaying = false;
+
+document.addEventListener("DOMContentLoaded", () => {
+    const imageUrlInput = document.getElementById('image-url');
+    const localImageInput = document.getElementById('local-image');
+    const imagePreview = document.getElementById('image-preview');
+    let selectedImageSrc = imageUrlInput.value;
+
+    imageUrlInput.addEventListener('input', (e) => {
+        selectedImageSrc = e.target.value;
+        imagePreview.src = selectedImageSrc;
+    });
+
+    localImageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                selectedImageSrc = event.target.result;
+                imagePreview.src = selectedImageSrc;
+                imageUrlInput.value = "[Imagen Local Seleccionada]";
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById('start-game-btn').addEventListener('click', () => {
+        const mode = document.getElementById('game-mode').value;
+        const size = parseInt(document.getElementById('grid-size').value, 10);
+
+        // Cambiar de vista en el DOM sin cambiar la URL de GitHub Pages
+        document.getElementById('view-menu').classList.add('hidden');
+        document.getElementById('view-game').classList.remove('hidden');
+
+        initPuzzleGame(selectedImageSrc, size, mode);
+    });
+
+    document.getElementById('back-to-menu-btn').addEventListener('click', () => {
+        clearInterval(timerInterval);
+        document.getElementById('view-game').classList.add('hidden');
+        document.getElementById('win-modal').classList.add('hidden');
+        document.getElementById('view-menu').classList.remove('hidden');
+    });
+
+    document.getElementById('play-again-btn').addEventListener('click', () => {
+        document.getElementById('win-modal').classList.add('hidden');
+        document.getElementById('view-game').classList.add('hidden');
+        document.getElementById('view-menu').classList.remove('hidden');
+    });
+});
 
 function startTimer() {
     if (timerInterval) clearInterval(timerInterval);
@@ -18,34 +63,27 @@ function startTimer() {
     }, 1000);
 }
 
-function initBlockPuzzle() {
-    const board = document.getElementById('block-puzzle-board');
-    if (!board) return;
-
-    const imgSrc = sessionStorage.getItem(STORAGE_IMG) || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800';
-    const size = parseInt(sessionStorage.getItem(STORAGE_SIZE) || '4', 10);
-
+function initPuzzleGame(imgSrc, size, mode) {
+    const board = document.getElementById('puzzle-board');
     board.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
     board.style.gridTemplateRows = `repeat(${size}, 1fr)`;
 
     let totalPieces = size * size;
     let pieces = [];
 
-    // Generar índices originales
     for (let i = 0; i < totalPieces; i++) {
         pieces.push(i);
     }
 
-    // Mezclar piezas asegurando que no queden ordenadas de inicio
     do {
         pieces.sort(() => Math.random() - 0.5);
     } while (isSolved(pieces));
 
-    renderBlockBoard(board, pieces, size, imgSrc);
+    renderBoard(board, pieces, size, imgSrc);
     startTimer();
 }
 
-function renderBlockBoard(board, pieces, size, imgSrc) {
+function renderBoard(board, pieces, size, imgSrc) {
     board.innerHTML = '';
     moves = 0;
     document.getElementById('move-count').textContent = moves;
@@ -58,9 +96,8 @@ function renderBlockBoard(board, pieces, size, imgSrc) {
         tile.dataset.current = currentIndex;
         tile.dataset.original = originalIndex;
 
-        // Calcular posición de recorte en la imagen de fondo (Sprite slicing)
-        const x = (originalIndex % size) * (100 / (size - 1));
-        const y = Math.floor(originalIndex / size) * (100 / (size - 1));
+        const x = (originalIndex % size) * (100 / (size - 1 || 1));
+        const y = Math.floor(originalIndex / size) * (100 / (size - 1 || 1));
 
         tile.style.backgroundImage = `url(${imgSrc})`;
         tile.style.backgroundSize = `${size * 100}% ${size * 100}%`;
@@ -68,8 +105,8 @@ function renderBlockBoard(board, pieces, size, imgSrc) {
         tile.style.cursor = 'pointer';
         tile.style.border = '1px solid rgba(255,255,255,0.2)';
         tile.style.transition = 'transform 0.15s, border-color 0.15s';
+        tile.style.minHeight = '60px';
 
-        // Evento de selección e intercambio (ideal para táctil y mouse)
         tile.addEventListener('click', () => {
             if (!selectedTile) {
                 selectedTile = tile;
@@ -80,7 +117,6 @@ function renderBlockBoard(board, pieces, size, imgSrc) {
                 selectedTile.style.transform = 'scale(1)';
                 selectedTile = null;
             } else {
-                // Intercambiar fondos e índices
                 let tempBg = tile.style.backgroundPosition;
                 let tempOrig = tile.dataset.original;
 
@@ -103,11 +139,6 @@ function renderBlockBoard(board, pieces, size, imgSrc) {
 
         board.appendChild(tile);
     });
-}
-
-function initClassicPuzzle() {
-    // Reutiliza la misma lógica modular para el modo clásico
-    initBlockPuzzle();
 }
 
 function isSolved(pieces) {
