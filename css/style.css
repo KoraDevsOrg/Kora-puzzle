@@ -12,8 +12,8 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    touch-action: none; /* Crucial para evitar scroll no deseado al arrastrar con el dedo */
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    touch-action: manipulation;
 }
 
 body {
@@ -161,7 +161,6 @@ select, input[type="text"] {
     gap: 8px;
 }
 
-/* Tablero de destino */
 .puzzle-board {
     width: 320px;
     height: 320px;
@@ -178,11 +177,9 @@ select, input[type="text"] {
     border: 2px dashed #475569;
     border-radius: 4px;
     position: relative;
-}
-
-.board-cell.highlight {
-    border-color: var(--accent-color);
-    background: rgba(16, 185, 129, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .tray-title {
@@ -192,7 +189,6 @@ select, input[type="text"] {
     margin-left: 5px;
 }
 
-/* Bandeja */
 .puzzle-tray {
     width: 100%;
     min-height: 120px;
@@ -204,31 +200,18 @@ select, input[type="text"] {
     flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
-    max-height: 150px;
+    max-height: 160px;
     overflow-y: auto;
 }
 
-/* Piezas móviles con soporte táctil absoluto */
 .puzzle-piece {
     background-repeat: no-repeat;
     cursor: grab;
     border-radius: 4px;
     box-shadow: 0 3px 6px rgba(0,0,0,0.5);
     border: 1px solid rgba(255,255,255,0.4);
-    position: relative;
-    z-index: 10;
 }
 
-.puzzle-piece.dragging {
-    position: fixed !important;
-    pointer-events: none;
-    z-index: 1000;
-    opacity: 0.85;
-    transform: scale(1.05);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.6);
-}
-
-/* Modal */
 .modal {
     position: fixed;
     top: 0;
