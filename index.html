@@ -3,40 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>KoraPuzzle Studio - Engine Pro</title>
+    <title>KoraPuzzle Studio</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div id="app">
-        <!-- VISTA 1: MENÚ -->
+        <!-- VISTA MENÚ -->
         <section id="view-menu" class="screen">
             <header>
                 <h1>🧩 KoraPuzzle Studio</h1>
-                <p>Rompecabezas táctil con físicas de arrastre</p>
+                <p>Arquitectura Modular y Escalable</p>
             </header>
 
             <div class="menu-card">
                 <div class="form-group">
-                    <label for="game-mode">Tipo de Rompecabezas:</label>
+                    <label for="game-mode">Modo de Juego:</label>
                     <select id="game-mode">
-                        <option value="classic">Clásico (Jigsaw Curvo Entrelazado)</option>
-                        <option value="modern">Moderno (Estilo Tetris - Piezas en L, T, Z)</option>
+                        <option value="classic">Clásico (Jigsaw Escalable N x N)</option>
+                        <option value="modern">Moderno (Bloques Irregulares Tetris)</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label for="grid-size">Dificultad:</label>
+                    <label for="grid-size">Dificultad (Piezas):</label>
                     <select id="grid-size">
-                        <option value="3">3 x 3 (Fácil)</option>
-                        <option value="4" selected>4 x 4 (Normal)</option>
-                        <option value="5">5 x 5 (Desafío)</option>
+                        <option value="3">3 x 3 (9 Piezas)</option>
+                        <option value="4" selected>4 x 4 (16 Piezas)</option>
+                        <option value="5">5 x 5 (25 Piezas)</option>
+                        <option value="6">6 x 6 (36 Piezas - Experto)</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Origen de la Imagen:</label>
-                    <input type="text" id="image-url" placeholder="URL de imagen pública..." value="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800">
-                    <label for="local-image" class="btn-secondary" style="margin-top: 8px; display: block; text-align: center;">📁 Subir Foto del Teléfono</label>
+                    <label>Imagen:</label>
+                    <input type="text" id="image-url" value="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800">
+                    <label for="local-image" class="btn-secondary" style="margin-top: 8px; display: block; text-align: center;">📁 Cargar del Teléfono</label>
                     <input type="file" id="local-image" accept="image/*" style="display: none;">
                 </div>
 
@@ -44,23 +45,23 @@
                     <img id="image-preview" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800" alt="Preview">
                 </div>
 
-                <button id="start-game-btn" class="btn-primary">¡Comenzar a Jugar!</button>
+                <button id="start-game-btn" class="btn-primary">¡Iniciar Partida!</button>
             </div>
         </section>
 
-        <!-- VISTA 2: JUEGO -->
+        <!-- VISTA JUEGO -->
         <section id="view-game" class="screen hidden">
             <div class="game-header">
                 <button class="btn-back" id="back-to-menu-btn">⬅ Menú</button>
                 <div class="stats">
-                    <span>Armados: <strong id="score-count">0</strong>/<span id="total-target">16</span></span>
+                    <span>Listas: <strong id="score-count">0</strong>/<span id="total-target">16</span></span>
                     <span>Tiempo: <strong id="timer">00:00</strong></span>
                 </div>
             </div>
 
             <div class="game-workspace">
                 <div id="puzzle-board" class="puzzle-board"></div>
-                <div class="tray-title">Bandeja de piezas (Arrastra con el dedo):</div>
+                <div class="tray-title">Bandeja de Piezas:</div>
                 <div id="puzzle-tray" class="puzzle-tray"></div>
             </div>
         </section>
@@ -69,12 +70,15 @@
     <!-- MODAL VICTORIA -->
     <div id="win-modal" class="modal hidden">
         <div class="modal-content">
-            <h2>🎉 ¡Excelente, Diego!</h2>
-            <p>Has completado el rompecabezas con éxito.</p>
+            <h2>🎉 ¡Victoria!</h2>
+            <p>Rompecabezas completado con éxito.</p>
             <button class="btn-primary" id="play-again-btn">Jugar de Nuevo</button>
         </div>
     </div>
 
-    <script src="js/puzzle.js"></script>
+    <!-- SCRIPTS MODULARIZADOS -->
+    <script src="js/core.js"></script>
+    <script src="js/puzzle-classic.js"></script>
+    <script src="js/puzzle-modern.js"></script>
 </body>
 </html>
