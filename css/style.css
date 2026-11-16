@@ -23,30 +23,41 @@ body {
     flex-direction: column;
 }
 
-.menu-container, .game-body {
+#app {
+    width: 100%;
     max-width: 600px;
     margin: 0 auto;
-    padding: 20px;
-    width: 100%;
     flex: 1;
     display: flex;
     flex-direction: column;
+}
+
+.screen {
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
+    flex: 1;
+}
+
+.screen.hidden {
+    display: none !important;
 }
 
 header {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 header h1 {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     color: #818cf8;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 header p {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: #94a3b8;
 }
 
@@ -54,52 +65,39 @@ header p {
     background-color: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 16px;
-    padding: 24px;
+    padding: 20px;
     width: 100%;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
 }
 
 .form-group {
-    margin-bottom: 18px;
+    margin-bottom: 14px;
 }
 
 .form-group label {
     display: block;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     color: #cbd5e1;
 }
 
 select, input[type="text"] {
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     border-radius: 8px;
     border: 1px solid var(--border-color);
     background-color: #0f172a;
     color: white;
-    font-size: 1rem;
+    font-size: 0.95rem;
     outline: none;
-    transition: border-color 0.2s;
-}
-
-select:focus, input[type="text"]:focus {
-    border-color: var(--primary-color);
-}
-
-.image-source-options {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
 }
 
 .btn-secondary {
-    display: inline-block;
     background-color: #334155;
     color: white;
-    padding: 10px 16px;
+    padding: 10px;
     border-radius: 8px;
-    text-align: center;
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 500;
@@ -112,10 +110,10 @@ select:focus, input[type="text"]:focus {
 
 .preview-container {
     width: 100%;
-    height: 180px;
+    height: 150px;
     border-radius: 8px;
     overflow: hidden;
-    margin: 16px 0;
+    margin: 12px 0;
     border: 1px solid var(--border-color);
     background: #000;
 }
@@ -128,7 +126,7 @@ select:focus, input[type="text"]:focus {
 
 .btn-primary {
     width: 100%;
-    padding: 14px;
+    padding: 12px;
     background-color: var(--primary-color);
     color: white;
     border: none;
@@ -136,15 +134,11 @@ select:focus, input[type="text"]:focus {
     font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.2s, transform 0.1s;
+    transition: background-color 0.2s;
 }
 
 .btn-primary:hover {
     background-color: var(--primary-hover);
-}
-
-.btn-primary:active {
-    transform: scale(0.98);
 }
 
 /* Pantalla de Juego */
@@ -153,7 +147,7 @@ select:focus, input[type="text"]:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .btn-back {
@@ -185,38 +179,46 @@ select:focus, input[type="text"]:focus {
     width: 320px;
     height: 320px;
     display: grid;
-    gap: 2px;
-    background: var(--border-color);
-    border-radius: 8px;
+    gap: 3px;
+    background: #0f172a;
+    border: 3px solid #334155;
+    border-radius: 12px;
+    position: relative;
     overflow: hidden;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.5);
 }
 
-/* ESTILOS CLAVE PARA LAS PIEZAS DEL ROMPECABEZAS */
+/* Piezas del Rompecabezas (Bloques y Poliminós) */
 .puzzle-tile {
-    width: 100%;
-    height: 100%;
     background-repeat: no-repeat;
     cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: transform 0.15s, border-color 0.15s;
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25), 0 4px 6px rgba(0,0,0,0.3);
+    transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+    background-color: #1e293b;
 }
 
-/* Modal de Victoria */
+.puzzle-tile.selected {
+    border: 2px solid var(--accent-color);
+    transform: scale(0.96);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+    z-index: 10;
+}
+
+/* Modal */
 .modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.8);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 100;
 }
 
-.hidden {
+.modal.hidden {
     display: none !important;
 }
 
