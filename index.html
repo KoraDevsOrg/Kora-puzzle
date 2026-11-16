@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KoraPuzzle Studio - Menú Principal</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="menu-container">
+        <header>
+            <h1>🧩 KoraPuzzle Studio</h1>
+            <p>Selecciona tu modo de juego y personaliza tu desafío</p>
+        </header>
+
+        <main class="menu-card">
+            <div class="form-group">
+                <label for="game-mode">Tipo de Rompecabezas:</label>
+                <select id="game-mode">
+                    <option value="block">Moderno (Estilo Bloques / Celdas Interactivas)</option>
+                    <option value="classic">Clásico (Cuadrícula Estándar)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="grid-size">Cantidad de Piezas (Dificultad):</label>
+                <select id="grid-size">
+                    <option value="3">3 x 3 (9 piezas - Fácil)</option>
+                    <option value="4" selected>4 x 4 (16 piezas - Normal)</option>
+                    <option value="5">5 x 5 (25 piezas - Desafío)</option>
+                    <option value="6">6 x 6 (36 piezas - Experto)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Origen de la Imagen:</label>
+                <div class="image-source-options">
+                    <input type="text" id="image-url" placeholder="Pega una URL de imagen pública..." value="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800">
+                    <div class="file-upload-wrapper">
+                        <label for="local-image" class="btn-secondary">📁 Subir desde el Teléfono</label>
+                        <input type="file" id="local-image" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-container">
+                <img id="image-preview" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800" alt="Vista previa">
+            </div>
+
+            <button id="start-game-btn" class="btn-primary">¡Comenzar a Jugar!</button>
+        </main>
+    </div>
+
+    <script>
+        // Previsualizador dinámico y manejo de archivos locales
+        const imageUrlInput = document.getElementById('image-url');
+        const localImageInput = document.getElementById('local-image');
+        const imagePreview = document.getElementById('image-preview');
+        let selectedImageSrc = imageUrlInput.value;
+
+        imageUrlInput.addEventListener('input', (e) => {
+            selectedImageSrc = e.target.value;
+            imagePreview.src = selectedImageSrc;
+        });
+
+        localImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    selectedImageSrc = event.target.result;
+                    imagePreview.src = selectedImageSrc;
+                    imageUrlInput.value = "[Imagen Local Seleccionada]";
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('start-game-btn').addEventListener('click', () => {
+            const mode = document.getElementById('game-mode').value;
+            const size = document.getElementById('grid-size').value;
+            
+            // Guardar configuración en sessionStorage para que la lean los sub-html
+            sessionStorage.setItem('kora_puzzle_image', selectedImageSrc);
+            sessionStorage.setItem('kora_puzzle_size', size);
+
+            if (mode === 'block') {
+                window.location.href = 'puzzle-block.html';
+            } else {
+                window.location.href = 'puzzle-classic.html';
+            }
+        });
+    </script>
+</body>
+</html>
