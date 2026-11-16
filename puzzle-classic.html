@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KoraPuzzle - Modo Clásico</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="game-body">
+    <div class="game-header">
+        <button class="btn-back" onclick="window.location.href='index.html'">⬅ Volver al Menú</button>
+        <div class="stats">
+            <span>Movimientos: <strong id="move-count">0</strong></span>
+            <span>Tiempo: <strong id="timer">00:00</strong></span>
+        </div>
+    </div>
+
+    <main class="puzzle-wrapper">
+        <div id="classic-puzzle-board" class="puzzle-board"></div>
+    </main>
+
+    <div id="win-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>🎉 ¡Excelente Trabajo!</h2>
+            <p>Rompecabezas clásico resuelto correctamente.</p>
+            <button class="btn-primary" onclick="window.location.href='index.html'">Jugar de Nuevo</button>
+        </div>
+    </div>
+
+    <script src="js/puzzle.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            initClassicPuzzle();
+        });
+    </script>
+</body>
+</html>
