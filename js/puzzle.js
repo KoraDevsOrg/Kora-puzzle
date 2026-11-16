@@ -1,6 +1,7 @@
-let moves = 0;
 let timerSeconds = 0;
 let timerInterval = null;
+let placedCount = 0;
+let totalPiecesCount = 0;
 
 document.addEventListener("DOMContentLoaded", () => {
     const imageUrlInput = document.getElementById('image-url');
@@ -33,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('view-menu').classList.add('hidden');
         document.getElementById('view-game').classList.remove('hidden');
 
-        initPuzzle(selectedImageSrc, size, mode);
+        initAssemblyPuzzle(selectedImageSrc, size, mode);
     });
 
     document.getElementById('back-to-menu-btn').addEventListener('click', resetToMenu);
@@ -62,193 +63,157 @@ function startTimer() {
     }, 1000);
 }
 
-function initPuzzle(imgSrc, size, mode) {
+function initAssemblyPuzzle(imgSrc, size, mode) {
     const board = document.getElementById('puzzle-board');
+    const tray = document.getElementById('puzzle-tray');
     board.innerHTML = '';
-    moves = 0;
-    document.getElementById('move-count').textContent = moves;
+    tray.innerHTML = '';
+    placedCount = 0;
 
     if (mode === 'classic') {
-        initClassicSlidePuzzle(board, size, imgSrc);
+        // Modo Clásico: Cuadrículas estándar 1x1 estilo Jigsaw de caja
+        totalPiecesCount = size * size;
+        document.getElementById('total-target').textContent = totalPiecesCount;
+        document.getElementById('score-count').textContent = placedCount;
+
+        board.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+        board.style.gridTemplateRows = `repeat(${size}, 1fr)`;
+
+        let piecesData = [];
+        for (let i = 0; i < totalPiecesCount; i++) {
+            piecesData.push(i);
+        }
+        piecesData.sort(() => Math.random() - 0.5);
+
+        // Crear celdas de destino en el tablero
+        for (let i = 0; i < totalPiecesCount; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'board-cell';
+            cell.dataset.targetIndex = i;
+
+            cell.addEventListener('dragover', (e) => e.preventDefault());
+            cell.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const pieceId = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                if (parseInt(cell.dataset.targetIndex, 10) === pieceId && cell.children.length === 0) {
+                    const pieceEl = document.querySelector(`[data-piece-id='${pieceId}']`);
+                    if (pieceEl) {
+                        cell.appendChild(pieceEl);
+                        pieceEl.draggable = false;
+                        pieceEl.style.width = '100%';
+                        pieceEl.style.height = '100%';
+                        pieceEl.style.boxShadow = 'none';
+                        placedCount++;
+                        document.getElementById('score-count').textContent = placedCount;
+                        checkWinCondition();
+                    }
+                }
+            });
+            board.appendChild(cell);
+        }
+
+        // Crear piezas en la bandeja
+        piecesData.forEach((origIdx) => {
+            const piece = document.createElement('div');
+            piece.className = 'puzzle-piece';
+            piece.dataset.pieceId = origIdx;
+            piece.draggable = true;
+            piece.style.width = '60px';
+            piece.style.height = '60px';
+
+            const col = origIdx % size;
+            const row = Math.floor(origIdx / size);
+            const div = size > 1 ? size - 1 : 1;
+
+            piece.style.backgroundImage = `url(${imgSrc})`;
+            piece.style.backgroundSize = `${size * 100}% ${size * 100}%`;
+            piece.style.backgroundPosition = `${(col * 100) / div}% ${(row * 100) / div}%`;
+
+            piece.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', origIdx);
+            });
+
+            tray.appendChild(piece);
+        });
+
     } else {
-        initModernPolyominoDragPuzzle(board, size, imgSrc);
+        // Modo Moderno: Piezas asimétricas estilo Tetris / Dominó (Vertical y Horizontal)
+        totalPiecesCount = 5; // Bloques compuestos
+        document.getElementById('total-target').textContent = totalPiecesCount;
+        document.getElementById('score-count').textContent = placedCount;
+
+        board.style.gridTemplateColumns = `repeat(4, 1fr)`;
+        board.style.gridTemplateRows = `repeat(4, 1fr)`;
+
+        let polyominos = [
+            { id: 0, r: 0, c: 0, rs: 1, cs: 2, w: 120, h: 60 }, // Dominó Horizontal
+            { id: 1, r: 0, c: 2, rs: 2, cs: 1, w: 60, h: 120 }, // Dominó Vertical
+            { id: 2, r: 2, c: 0, rs: 2, cs: 2, w: 120, h: 120 }, // Bloque Cuadrado 2x2
+            { id: 3, r: 2, c: 2, rs: 1, cs: 2, w: 120, h: 60 }, // Dominó Horizontal
+            { id: 4, r: 3, c: 2, rs: 1, cs: 2, w: 120, h: 60 }  // Dominó Horizontal
+        ];
+
+        let shuffledPoly = [...polyominos].sort(() => Math.random() - 0.5);
+
+        // Crear zonas en el tablero moderno
+        polyominos.forEach((poly) => {
+            const zone = document.createElement('div');
+            zone.className = 'board-cell';
+            zone.dataset.polyId = poly.id;
+            zone.style.gridRow = `${poly.r + 1} / span ${poly.rs}`;
+            zone.style.gridColumn = `${poly.c + 1} / span ${poly.cs}`;
+
+            zone.addEventListener('dragover', (e) => e.preventDefault());
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const droppedId = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                if (droppedId === poly.id && zone.children.length === 0) {
+                    const pEl = document.querySelector(`[data-poly-id='${droppedId}']`);
+                    if (pEl) {
+                        zone.appendChild(pEl);
+                        pEl.draggable = false;
+                        pEl.style.width = '100%';
+                        pEl.style.height = '100%';
+                        pEl.style.boxShadow = 'none';
+                        placedCount++;
+                        document.getElementById('score-count').textContent = placedCount;
+                        checkWinCondition();
+                    }
+                }
+            });
+            board.appendChild(zone);
+        });
+
+        // Crear piezas asimétricas en la bandeja
+        shuffledPoly.forEach((poly) => {
+            const piece = document.createElement('div');
+            piece.className = 'puzzle-piece';
+            piece.dataset.polyId = poly.id;
+            piece.draggable = true;
+            piece.style.width = `${poly.w * 0.75}px`;
+            piece.style.height = `${poly.h * 0.75}px`;
+
+            const bgX = (poly.c * 100) / 3;
+            const bgY = (poly.r * 100) / 3;
+
+            piece.style.backgroundImage = `url(${imgSrc})`;
+            piece.style.backgroundSize = `400% 400%`;
+            piece.style.backgroundPosition = `${bgX}% ${bgY}%`;
+
+            piece.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', poly.id);
+            });
+
+            tray.appendChild(piece);
+        });
     }
 
     startTimer();
 }
 
-/* ==========================================
-   MODO CLÁSICO: Jigsaw Deslizante (Caja con hueco)
-   ========================================== */
-function initClassicSlidePuzzle(board, size, imgSrc) {
-    board.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
-    board.style.gridTemplateRows = `repeat(${size}, 1fr)`;
-
-    let total = size * size;
-    let tilesArray = [];
-    for (let i = 0; i < total; i++) tilesArray.push(i);
-
-    // Mezclar asegurando que tenga solución
-    do {
-        tilesArray.sort(() => Math.random() - 0.5);
-    } while (isSolved(tilesArray));
-
-    // El último elemento es el espacio vacío inicial
-    let emptyIndex = total - 1;
-
-    renderSlideBoard();
-
-    function renderSlideBoard() {
-        board.innerHTML = '';
-        tilesArray.forEach((origIdx, currIdx) => {
-            const tile = document.createElement('div');
-            tile.className = 'puzzle-tile';
-            tile.dataset.index = currIdx;
-
-            if (origIdx === total - 1) {
-                tile.classList.add('empty-tile');
-            } else {
-                const col = origIdx % size;
-                const row = Math.floor(origIdx / size);
-                const div = size > 1 ? size - 1 : 1;
-
-                tile.style.backgroundImage = `url(${imgSrc})`;
-                tile.style.backgroundSize = `${size * 100}% ${size * 100}%`;
-                tile.style.backgroundPosition = `${(col * 100) / div}% ${(row * 100) / div}%`;
-
-                // Evento Drag & Drop / Click para mover al espacio vacío
-                tile.addEventListener('click', () => tryMove(currIdx));
-                
-                // Soporte táctil de arrastre hacia la casilla vacía
-                tile.draggable = true;
-                tile.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', currIdx));
-                tile.addEventListener('dragover', (e) => e.preventDefault());
-                tile.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
-                    tryMove(fromIdx);
-                });
-            }
-
-            board.appendChild(tile);
-        });
-    }
-
-    function tryMove(idx) {
-        const r1 = Math.floor(idx / size), c1 = idx % size;
-        const r2 = Math.floor(tilesArray.indexOf(total - 1) / size), c2 = tilesArray.indexOf(total - 1) % size;
-
-        // Comprobar si es adyacente al espacio vacío
-        const dist = Math.abs(r1 - r2) + Math.abs(c1 - c2);
-        if (dist === 1) {
-            const emptyPos = tilesArray.indexOf(total - 1);
-            [tilesArray[idx], tilesArray[emptyPos]] = [tilesArray[emptyPos], tilesArray[idx]];
-            moves++;
-            document.getElementById('move-count').textContent = moves;
-            renderSlideBoard();
-
-            if (isSolved(tilesArray)) {
-                clearInterval(timerInterval);
-                document.getElementById('win-modal').classList.remove('hidden');
-            }
-        }
-    }
-}
-
-function isSolved(arr) {
-    return arr.every((val, idx) => val === idx);
-}
-
-/* ==========================================
-   MODO MODERNO: Poliminós / Bloques Irregulares con Drag & Drop libre
-   ========================================== */
-function initModernPolyominoDragPuzzle(board, size, imgSrc) {
-    board.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
-    board.style.gridTemplateRows = `repeat(${size}, 1fr)`;
-
-    // Definir bloques asimétricos modernos (Poliminós)
-    let blocks = [
-        { id: 0, r: 0, c: 0, rs: 1, cs: 2 },
-        { id: 1, r: 0, c: 2, rs: 2, cs: 1 },
-        { id: 2, r: 0, c: 3, rs: 1, cs: 1 },
-        { id: 3, r: 1, c: 0, rs: 2, cs: 1 },
-        { id: 4, r: 1, c: 1, rs: 1, cs: 2 },
-        { id: 5, r: 1, c: 3, rs: 2, cs: 1 },
-        { id: 6, r: 2, c: 1, rs: 1, cs: 1 },
-        { id: 7, r: 2, c: 2, rs: 2, cs: 2 },
-        { id: 8, r: 3, c: 0, rs: 1, cs: 1 },
-        { id: 9, r: 3, c: 1, rs: 1, cs: 1 }
-    ];
-
-    if (size !== 4) {
-        blocks = [];
-        for (let r = 0; r < size; r++) {
-            for (let c = 0; c < size; c++) {
-                blocks.push({ id: blocks.length, r, c, rs: 1, cs: 1 });
-            }
-        }
-    }
-
-    let positions = blocks.map(b => ({ r: b.r, c: b.c }));
-    do {
-        positions.sort(() => Math.random() - 0.5);
-    } while (blocks.every((b, idx) => b.r === positions[idx].r && b.c === positions[idx].c));
-
-    let draggedBlock = null;
-
-    renderPolyBoard();
-
-    function renderPolyBoard() {
-        board.innerHTML = '';
-        blocks.forEach((block, index) => {
-            const tile = document.createElement('div');
-            tile.className = 'puzzle-tile';
-            tile.dataset.index = index;
-
-            const currentPos = positions[index];
-            tile.style.gridRow = `${currentPos.r + 1} / span ${block.rs}`;
-            tile.style.gridColumn = `${currentPos.c + 1} / span ${block.cs}`;
-
-            const bgX = (block.c * 100) / (size - block.cs || 1);
-            const bgY = (block.r * 100) / (size - block.rs || 1);
-
-            tile.style.backgroundImage = `url(${imgSrc})`;
-            tile.style.backgroundSize = `${size * 100}% ${size * 100}%`;
-            tile.style.backgroundPosition = `${bgX}% ${bgY}%`;
-
-            // Configurar Drag & Drop nativo para escritorio y móvil
-            tile.draggable = true;
-            
-            tile.addEventListener('dragstart', () => {
-                draggedBlock = index;
-                tile.classList.add('dragging');
-            });
-
-            tile.addEventListener('dragend', () => {
-                tile.classList.remove('dragging');
-            });
-
-            tile.addEventListener('dragover', (e) => e.preventDefault());
-
-            tile.addEventListener('drop', (e) => {
-                e.preventDefault();
-                if (draggedBlock !== null && draggedBlock !== index) {
-                    // Intercambiar posiciones de los bloques asimétricos
-                    [positions[draggedBlock], positions[index]] = [positions[index], positions[draggedBlock]];
-                    moves++;
-                    document.getElementById('move-count').textContent = moves;
-                    renderPolyBoard();
-
-                    // Verificar victoria moderna
-                    let won = blocks.every((b, i) => positions[i].r === b.r && positions[i].c === b.c);
-                    if (won) {
-                        clearInterval(timerInterval);
-                        document.getElementById('win-modal').classList.remove('hidden');
-                    }
-                }
-            });
-
-            board.appendChild(tile);
-        });
+function checkWinCondition() {
+    if (placedCount === totalPiecesCount) {
+        clearInterval(timerInterval);
+        document.getElementById('win-modal').classList.remove('hidden');
     }
 }
