@@ -2,78 +2,75 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KoraPuzzle Studio - Jigsaw Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>KoraPuzzle Studio - Engine Pro</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div id="app">
-        <!-- VISTA 1: MENÚ PRINCIPAL -->
+        <!-- VISTA 1: MENÚ -->
         <section id="view-menu" class="screen">
             <header>
                 <h1>🧩 KoraPuzzle Studio</h1>
-                <p>Elige tu estilo de rompecabezas por ensamblaje</p>
+                <p>Rompecabezas táctil con físicas de arrastre</p>
             </header>
 
             <div class="menu-card">
                 <div class="form-group">
                     <label for="game-mode">Tipo de Rompecabezas:</label>
                     <select id="game-mode">
-                        <option value="classic">Clásico (Jigsaw Tradicional - Celdas Cuadradas)</option>
-                        <option value="modern">Moderno (Estilo Tetris / Dominó - Bloques Irregulares)</option>
+                        <option value="classic">Clásico (Jigsaw Curvo Entrelazado)</option>
+                        <option value="modern">Moderno (Estilo Tetris - Piezas en L, T, Z)</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label for="grid-size">Dificultad / Piezas:</label>
+                    <label for="grid-size">Dificultad:</label>
                     <select id="grid-size">
-                        <option value="3">3 x 3 (9 Piezas - Fácil)</option>
-                        <option value="4" selected>4 x 4 (16 Piezas - Normal)</option>
-                        <option value="5">5 x 5 (25 Piezas - Desafío)</option>
+                        <option value="3">3 x 3 (Fácil)</option>
+                        <option value="4" selected>4 x 4 (Normal)</option>
+                        <option value="5">5 x 5 (Desafío)</option>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label>Origen de la Imagen:</label>
-                    <input type="text" id="image-url" placeholder="Pega URL de imagen pública..." value="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800">
-                    <label for="local-image" class="btn-secondary" style="margin-top: 8px; display: block; text-align: center;">📁 Subir desde el Teléfono</label>
+                    <input type="text" id="image-url" placeholder="URL de imagen pública..." value="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800">
+                    <label for="local-image" class="btn-secondary" style="margin-top: 8px; display: block; text-align: center;">📁 Subir Foto del Teléfono</label>
                     <input type="file" id="local-image" accept="image/*" style="display: none;">
                 </div>
 
                 <div class="preview-container">
-                    <img id="image-preview" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800" alt="Vista previa">
+                    <img id="image-preview" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800" alt="Preview">
                 </div>
 
                 <button id="start-game-btn" class="btn-primary">¡Comenzar a Jugar!</button>
             </div>
         </section>
 
-        <!-- VISTA 2: ÁREA DE JUEGO -->
+        <!-- VISTA 2: JUEGO -->
         <section id="view-game" class="screen hidden">
             <div class="game-header">
                 <button class="btn-back" id="back-to-menu-btn">⬅ Menú</button>
                 <div class="stats">
-                    <span>Colocadas: <strong id="score-count">0</strong>/<span id="total-target">16</span></span>
+                    <span>Armados: <strong id="score-count">0</strong>/<span id="total-target">16</span></span>
                     <span>Tiempo: <strong id="timer">00:00</strong></span>
                 </div>
             </div>
 
             <div class="game-workspace">
-                <!-- Tablero de destino (Celdas donde deben encajar) -->
                 <div id="puzzle-board" class="puzzle-board"></div>
-
-                <!-- Bandeja de piezas desordenadas para arrastrar -->
-                <div class="tray-title">Piezas disponibles (Arrastra al tablero):</div>
+                <div class="tray-title">Bandeja de piezas (Arrastra con el dedo):</div>
                 <div id="puzzle-tray" class="puzzle-tray"></div>
             </div>
         </section>
     </div>
 
-    <!-- MODAL DE VICTORIA -->
+    <!-- MODAL VICTORIA -->
     <div id="win-modal" class="modal hidden">
         <div class="modal-content">
-            <h2>🎉 ¡Increíble Trabajo!</h2>
-            <p>Has ensamblado el rompecabezas con éxito.</p>
+            <h2>🎉 ¡Excelente, Diego!</h2>
+            <p>Has completado el rompecabezas con éxito.</p>
             <button class="btn-primary" id="play-again-btn">Jugar de Nuevo</button>
         </div>
     </div>
