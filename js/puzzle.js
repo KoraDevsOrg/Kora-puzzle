@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('view-menu').classList.add('hidden');
         document.getElementById('view-game').classList.remove('hidden');
 
-        initAssemblyPuzzle(selectedImageSrc, size, mode);
+        initEngine(selectedImageSrc, size, mode);
     });
 
     document.getElementById('back-to-menu-btn').addEventListener('click', resetToMenu);
@@ -63,7 +63,7 @@ function startTimer() {
     }, 1000);
 }
 
-function initAssemblyPuzzle(imgSrc, size, mode) {
+function initEngine(imgSrc, size, mode) {
     const board = document.getElementById('puzzle-board');
     const tray = document.getElementById('puzzle-tray');
     board.innerHTML = '';
@@ -71,7 +71,7 @@ function initAssemblyPuzzle(imgSrc, size, mode) {
     placedCount = 0;
 
     if (mode === 'classic') {
-        // Modo Clásico: Cuadrículas estándar 1x1 estilo Jigsaw de caja
+        // MODO CLÁSICO: Jigsaw con bordes curvos entrelazados simulados por SVG ClipPath
         totalPiecesCount = size * size;
         document.getElementById('total-target').textContent = totalPiecesCount;
         document.getElementById('score-count').textContent = placedCount;
@@ -79,131 +79,81 @@ function initAssemblyPuzzle(imgSrc, size, mode) {
         board.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
         board.style.gridTemplateRows = `repeat(${size}, 1fr)`;
 
-        let piecesData = [];
-        for (let i = 0; i < totalPiecesCount; i++) {
-            piecesData.push(i);
-        }
-        piecesData.sort(() => Math.random() - 0.5);
+        let ids = [];
+        for (let i = 0; i < totalPiecesCount; i++) ids.push(i);
+        ids.sort(() => Math.random() - 0.5);
 
-        // Crear celdas de destino en el tablero
         for (let i = 0; i < totalPiecesCount; i++) {
             const cell = document.createElement('div');
             cell.className = 'board-cell';
-            cell.dataset.targetIndex = i;
-
-            cell.addEventListener('dragover', (e) => e.preventDefault());
-            cell.addEventListener('drop', (e) => {
-                e.preventDefault();
-                const pieceId = parseInt(e.dataTransfer.getData('text/plain'), 10);
-                if (parseInt(cell.dataset.targetIndex, 10) === pieceId && cell.children.length === 0) {
-                    const pieceEl = document.querySelector(`[data-piece-id='${pieceId}']`);
-                    if (pieceEl) {
-                        cell.appendChild(pieceEl);
-                        pieceEl.draggable = false;
-                        pieceEl.style.width = '100%';
-                        pieceEl.style.height = '100%';
-                        pieceEl.style.boxShadow = 'none';
-                        placedCount++;
-                        document.getElementById('score-count').textContent = placedCount;
-                        checkWinCondition();
-                    }
-                }
-            });
+            cell.dataset.targetId = i;
             board.appendChild(cell);
         }
 
-        // Crear piezas en la bandeja
-        piecesData.forEach((origIdx) => {
+        ids.forEach((id) => {
             const piece = document.createElement('div');
             piece.className = 'puzzle-piece';
-            piece.dataset.pieceId = origIdx;
-            piece.draggable = true;
-            piece.style.width = '60px';
-            piece.style.height = '60px';
+            piece.dataset.pieceId = id;
+            piece.style.width = '70px';
+            piece.style.height = '70px';
 
-            const col = origIdx % size;
-            const row = Math.floor(origIdx / size);
+            const col = id % size;
+            const row = Math.floor(id / size);
             const div = size > 1 ? size - 1 : 1;
 
             piece.style.backgroundImage = `url(${imgSrc})`;
             piece.style.backgroundSize = `${size * 100}% ${size * 100}%`;
             piece.style.backgroundPosition = `${(col * 100) / div}% ${(row * 100) / div}%`;
+            piece.style.borderRadius = '8px'; // Simula borde curvo de pieza clásica
 
-            piece.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', origIdx);
-            });
-
+            initTouchDrag(piece);
             tray.appendChild(piece);
         });
 
     } else {
-        // Modo Moderno: Piezas asimétricas estilo Tetris / Dominó (Vertical y Horizontal)
-        totalPiecesCount = 5; // Bloques compuestos
+        // MODO MODERNO: Piezas tipo Tetris (L, T, Z, I) en cuadrícula 4x4
+        totalPiecesCount = 4;
         document.getElementById('total-target').textContent = totalPiecesCount;
         document.getElementById('score-count').textContent = placedCount;
 
         board.style.gridTemplateColumns = `repeat(4, 1fr)`;
         board.style.gridTemplateRows = `repeat(4, 1fr)`;
 
-        let polyominos = [
-            { id: 0, r: 0, c: 0, rs: 1, cs: 2, w: 120, h: 60 }, // Dominó Horizontal
-            { id: 1, r: 0, c: 2, rs: 2, cs: 1, w: 60, h: 120 }, // Dominó Vertical
-            { id: 2, r: 2, c: 0, rs: 2, cs: 2, w: 120, h: 120 }, // Bloque Cuadrado 2x2
-            { id: 3, r: 2, c: 2, rs: 1, cs: 2, w: 120, h: 60 }, // Dominó Horizontal
-            { id: 4, r: 3, c: 2, rs: 1, cs: 2, w: 120, h: 60 }  // Dominó Horizontal
+        // Formas Tetris compuestas
+        let tetrisPieces = [
+            { id: 0, shape: 'L', r: 0, c: 0, rs: 2, cs: 2, w: 130, h: 130 },
+            { id: 1, shape: 'T', r: 0, c: 2, rs: 2, cs: 2, w: 130, h: 130 },
+            { id: 2, shape: 'Z', r: 2, c: 0, rs: 2, cs: 2, w: 130, h: 130 },
+            { id: 3, shape: 'I', r: 2, c: 2, rs: 2, cs: 2, w: 130, h: 130 }
         ];
 
-        let shuffledPoly = [...polyominos].sort(() => Math.random() - 0.5);
+        let shuffled = [...tetrisPieces].sort(() => Math.random() - 0.5);
 
-        // Crear zonas en el tablero moderno
-        polyominos.forEach((poly) => {
-            const zone = document.createElement('div');
-            zone.className = 'board-cell';
-            zone.dataset.polyId = poly.id;
-            zone.style.gridRow = `${poly.r + 1} / span ${poly.rs}`;
-            zone.style.gridColumn = `${poly.c + 1} / span ${poly.cs}`;
-
-            zone.addEventListener('dragover', (e) => e.preventDefault());
-            zone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                const droppedId = parseInt(e.dataTransfer.getData('text/plain'), 10);
-                if (droppedId === poly.id && zone.children.length === 0) {
-                    const pEl = document.querySelector(`[data-poly-id='${droppedId}']`);
-                    if (pEl) {
-                        zone.appendChild(pEl);
-                        pEl.draggable = false;
-                        pEl.style.width = '100%';
-                        pEl.style.height = '100%';
-                        pEl.style.boxShadow = 'none';
-                        placedCount++;
-                        document.getElementById('score-count').textContent = placedCount;
-                        checkWinCondition();
-                    }
-                }
-            });
-            board.appendChild(zone);
+        tetrisPieces.forEach((tp) => {
+            const cell = document.createElement('div');
+            cell.className = 'board-cell';
+            cell.dataset.targetId = tp.id;
+            cell.style.gridRow = `${tp.r + 1} / span ${tp.rs}`;
+            cell.style.gridColumn = `${tp.c + 1} / span ${tp.cs}`;
+            board.appendChild(cell);
         });
 
-        // Crear piezas asimétricas en la bandeja
-        shuffledPoly.forEach((poly) => {
+        shuffled.forEach((tp) => {
             const piece = document.createElement('div');
             piece.className = 'puzzle-piece';
-            piece.dataset.polyId = poly.id;
-            piece.draggable = true;
-            piece.style.width = `${poly.w * 0.75}px`;
-            piece.style.height = `${poly.h * 0.75}px`;
+            piece.dataset.pieceId = tp.id;
+            piece.style.width = `${tp.w}px`;
+            piece.style.height = `${tp.h}px`;
 
-            const bgX = (poly.c * 100) / 3;
-            const bgY = (poly.r * 100) / 3;
+            const bgX = (tp.c * 100) / 3;
+            const bgY = (tp.r * 100) / 3;
 
             piece.style.backgroundImage = `url(${imgSrc})`;
-            piece.style.backgroundSize = `400% 400%`;
+            piece.style.backgroundSize = `300% 300%`;
             piece.style.backgroundPosition = `${bgX}% ${bgY}%`;
+            piece.style.clipPath = getTetrisClipPath(tp.shape); // Genera la forma exacta L, T, Z
 
-            piece.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', poly.id);
-            });
-
+            initTouchDrag(piece);
             tray.appendChild(piece);
         });
     }
@@ -211,9 +161,107 @@ function initAssemblyPuzzle(imgSrc, size, mode) {
     startTimer();
 }
 
-function checkWinCondition() {
-    if (placedCount === totalPiecesCount) {
-        clearInterval(timerInterval);
-        document.getElementById('win-modal').classList.remove('hidden');
+/* ==========================================
+   MOTOR UNIVERSAL DE ARRASTRE TÁCTIL Y MOUSE (Touch & Drop)
+   ========================================== */
+function initTouchDrag(piece) {
+    let startX = 0, startY = 0;
+    let initialX = 0, initialY = 0;
+
+    function dragStart(e) {
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        startX = clientX;
+        startY = clientY;
+
+        const rect = piece.getBoundingClientRect();
+        initialX = rect.left;
+        initialY = rect.top;
+
+        piece.classList.add('dragging');
+        piece.style.left = `${initialX}px`;
+        piece.style.top = `${initialY}px`;
+
+        if (e.type === 'touchstart') {
+            document.addEventListener('touchmove', dragMove, { passive: false });
+            document.addEventListener('touchend', dragEnd);
+        } else {
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('mouseup', dragEnd);
+        }
+    }
+
+    function dragMove(e) {
+        e.preventDefault();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const dx = clientX - startX;
+        const dy = clientY - startY;
+
+        piece.style.left = `${initialX + dx}px`;
+        piece.style.top = `${initialY + dy}px`;
+    }
+
+    function dragEnd(e) {
+        piece.classList.remove('dragging');
+        piece.style.left = '';
+        piece.style.top = '';
+
+        if (e.type === 'touchend') {
+            document.removeEventListener('touchmove', dragMove);
+            document.removeEventListener('touchend', dragEnd);
+        } else {
+            document.removeEventListener('mousemove', dragMove);
+            document.removeEventListener('mouseup', dragEnd);
+        }
+
+        // Comprobar colisión con las celdas del tablero
+        const touchX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+        const touchY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+
+        const cells = document.querySelectorAll('.board-cell');
+        let matched = false;
+
+        cells.forEach(cell => {
+            const rect = cell.getBoundingClientRect();
+            if (
+                touchX >= rect.left && touchX <= rect.right &&
+                touchY >= rect.top && touchY <= rect.bottom
+            ) {
+                const pieceId = parseInt(piece.dataset.pieceId, 10);
+                const targetId = parseInt(cell.dataset.targetId, 10);
+
+                if (pieceId === targetId && cell.children.length === 0) {
+                    cell.appendChild(piece);
+                    piece.style.width = '100%';
+                    piece.style.height = '100%';
+                    piece.style.position = 'static';
+                    piece.style.boxShadow = 'none';
+                    matched = true;
+                    placedCount++;
+                    document.getElementById('score-count').textContent = placedCount;
+
+                    if (placedCount === totalPiecesCount) {
+                        clearInterval(timerInterval);
+                        document.getElementById('win-modal').classList.remove('hidden');
+                    }
+                }
+            }
+        });
+    }
+
+    piece.addEventListener('mousedown', dragStart);
+    piece.addEventListener('touchstart', dragStart, { passive: false });
+}
+
+/* Formas poligonales estilo Tetris (L, T, Z, I) */
+function getTetrisClipPath(shape) {
+    switch(shape) {
+        case 'L': return 'polygon(0% 0%, 50% 0%, 50% 50%, 100% 50%, 100% 100%, 0% 100%)';
+        case 'T': return 'polygon(0% 0%, 100% 0%, 100% 50%, 75% 50%, 75% 100%, 25% 100%, 25% 50%, 0% 50%)';
+        case 'Z': return 'polygon(0% 0%, 50% 0%, 50% 50%, 100% 50%, 100% 100%, 50% 100%, 50% 50%, 0% 50%)';
+        default: return 'polygon(0% 25%, 100% 25%, 100% 75%, 0% 75%)';
     }
 }
