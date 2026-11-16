@@ -3,74 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KoraPuzzle Studio - GitHub Pages</title>
+    <title>KoraPuzzle Studio</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <!-- VISTA 1: MENÚ PRINCIPAL -->
-    <div id="view-menu" class="menu-container">
-        <header>
-            <h1>🧩 KoraPuzzle Studio</h1>
-            <p>Selecciona tu modo de juego y personaliza tu desafío</p>
-        </header>
+    <div id="app">
+        <!-- VISTA 1: MENÚ PRINCIPAL -->
+        <section id="view-menu" class="screen">
+            <header>
+                <h1>🧩 KoraPuzzle Studio</h1>
+                <p>Rompecabezas configurable y moderno</p>
+            </header>
 
-        <main class="menu-card">
-            <div class="form-group">
-                <label for="game-mode">Tipo de Rompecabezas:</label>
-                <select id="game-mode">
-                    <option value="block">Moderno (Estilo Bloques / Celdas Interactivas)</option>
-                    <option value="classic">Clásico (Cuadrícula Estándar)</option>
-                </select>
+            <div class="menu-card">
+                <div class="form-group">
+                    <label for="game-mode">Tipo de Rompecabezas:</label>
+                    <select id="game-mode">
+                        <option value="modern">Moderno (Bloques Irregulares / Poliminós)</option>
+                        <option value="classic">Clásico (Cuadrícula Estándar)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="grid-size">Dificultad / Tamaño:</label>
+                    <select id="grid-size">
+                        <option value="3">3 x 3 (Fácil)</option>
+                        <option value="4" selected>4 x 4 (Normal)</option>
+                        <option value="5">5 x 5 (Desafío)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Origen de la Imagen:</label>
+                    <input type="text" id="image-url" placeholder="Pega URL de imagen pública..." value="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800">
+                    <label for="local-image" class="btn-secondary" style="margin-top: 8px; display: block; text-align: center;">📁 Subir desde el Teléfono</label>
+                    <input type="file" id="local-image" accept="image/*" style="display: none;">
+                </div>
+
+                <div class="preview-container">
+                    <img id="image-preview" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800" alt="Vista previa">
+                </div>
+
+                <button id="start-game-btn" class="btn-primary">¡Comenzar a Jugar!</button>
             </div>
+        </section>
 
-            <div class="form-group">
-                <label for="grid-size">Cantidad de Piezas (Dificultad):</label>
-                <select id="grid-size">
-                    <option value="3">3 x 3 (9 piezas - Fácil)</option>
-                    <option value="4" selected>4 x 4 (16 piezas - Normal)</option>
-                    <option value="5">5 x 5 (25 piezas - Desafío)</option>
-                    <option value="6">6 x 6 (36 piezas - Experto)</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Origen de la Imagen:</label>
-                <div class="image-source-options">
-                    <input type="text" id="image-url" placeholder="Pega una URL de imagen pública..." value="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800">
-                    <div class="file-upload-wrapper">
-                        <label for="local-image" class="btn-secondary">📁 Subir desde el Teléfono</label>
-                        <input type="file" id="local-image" accept="image/*" style="display: none;">
-                    </div>
+        <!-- VISTA 2: ÁREA DE JUEGO -->
+        <section id="view-game" class="screen hidden">
+            <div class="game-header">
+                <button class="btn-back" id="back-to-menu-btn">⬅ Menú</button>
+                <div class="stats">
+                    <span>Movs: <strong id="move-count">0</strong></span>
+                    <span>Tiempo: <strong id="timer">00:00</strong></span>
                 </div>
             </div>
 
-            <div class="preview-container">
-                <img id="image-preview" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800" alt="Vista previa">
-            </div>
-
-            <button id="start-game-btn" class="btn-primary">¡Comenzar a Jugar!</button>
-        </main>
-    </div>
-
-    <!-- VISTA 2: ÁREA DE JUEGO (Oculta por defecto) -->
-    <div id="view-game" class="game-body hidden">
-        <div class="game-header">
-            <button class="btn-back" id="back-to-menu-btn">⬅ Volver al Menú</button>
-            <div class="stats">
-                <span>Movimientos: <strong id="move-count">0</strong></span>
-                <span>Tiempo: <strong id="timer">00:00</strong></span>
-            </div>
-        </div>
-
-        <main class="puzzle-wrapper">
-            <div id="puzzle-board" class="puzzle-board"></div>
-        </main>
+            <main class="puzzle-wrapper">
+                <div id="puzzle-board" class="puzzle-board"></div>
+            </main>
+        </section>
     </div>
 
     <!-- MODAL DE VICTORIA -->
     <div id="win-modal" class="modal hidden">
         <div class="modal-content">
-            <h2>🎉 ¡Excelente Trabajo!</h2>
+            <h2>🎉 ¡Felicitaciones!</h2>
             <p>Has completado el rompecabezas con éxito.</p>
             <button class="btn-primary" id="play-again-btn">Jugar de Nuevo</button>
         </div>
