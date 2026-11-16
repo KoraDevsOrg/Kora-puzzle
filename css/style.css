@@ -230,3 +230,7 @@ select:focus, input[type="text"]:focus {
     margin-bottom: 20px;
     font-size: 0.95rem;
 }
+.hidden {
+    display: none !important;
+}
+
