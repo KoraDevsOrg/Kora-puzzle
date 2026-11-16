@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KoraPuzzle Studio - Menú Principal</title>
+    <title>KoraPuzzle Studio - GitHub Pages</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="menu-container">
+    <!-- VISTA 1: MENÚ PRINCIPAL -->
+    <div id="view-menu" class="menu-container">
         <header>
             <h1>🧩 KoraPuzzle Studio</h1>
             <p>Selecciona tu modo de juego y personaliza tu desafío</p>
@@ -51,45 +52,30 @@
         </main>
     </div>
 
-    <script>
-        // Previsualizador dinámico y manejo de archivos locales
-        const imageUrlInput = document.getElementById('image-url');
-        const localImageInput = document.getElementById('local-image');
-        const imagePreview = document.getElementById('image-preview');
-        let selectedImageSrc = imageUrlInput.value;
+    <!-- VISTA 2: ÁREA DE JUEGO (Oculta por defecto) -->
+    <div id="view-game" class="game-body hidden">
+        <div class="game-header">
+            <button class="btn-back" id="back-to-menu-btn">⬅ Volver al Menú</button>
+            <div class="stats">
+                <span>Movimientos: <strong id="move-count">0</strong></span>
+                <span>Tiempo: <strong id="timer">00:00</strong></span>
+            </div>
+        </div>
 
-        imageUrlInput.addEventListener('input', (e) => {
-            selectedImageSrc = e.target.value;
-            imagePreview.src = selectedImageSrc;
-        });
+        <main class="puzzle-wrapper">
+            <div id="puzzle-board" class="puzzle-board"></div>
+        </main>
+    </div>
 
-        localImageInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    selectedImageSrc = event.target.result;
-                    imagePreview.src = selectedImageSrc;
-                    imageUrlInput.value = "[Imagen Local Seleccionada]";
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+    <!-- MODAL DE VICTORIA -->
+    <div id="win-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>🎉 ¡Excelente Trabajo!</h2>
+            <p>Has completado el rompecabezas con éxito.</p>
+            <button class="btn-primary" id="play-again-btn">Jugar de Nuevo</button>
+        </div>
+    </div>
 
-        document.getElementById('start-game-btn').addEventListener('click', () => {
-            const mode = document.getElementById('game-mode').value;
-            const size = document.getElementById('grid-size').value;
-            
-            // Guardar configuración en sessionStorage para que la lean los sub-html
-            sessionStorage.setItem('kora_puzzle_image', selectedImageSrc);
-            sessionStorage.setItem('kora_puzzle_size', size);
-
-            if (mode === 'block') {
-                window.location.href = 'puzzle-block.html';
-            } else {
-                window.location.href = 'puzzle-classic.html';
-            }
-        });
-    </script>
+    <script src="js/puzzle.js"></script>
 </body>
 </html>
