@@ -3,41 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>KoraPuzzle Studio</title>
+    <title>KoraPuzzle - Motor de Arrastre Libre</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div id="app">
-        <!-- VISTA MENÚ -->
+        <!-- MENÚ PRINCIPAL -->
         <section id="view-menu" class="screen">
             <header>
-                <h1>🧩 KoraPuzzle Studio</h1>
-                <p>Arquitectura Modular y Escalable</p>
+                <h1>🧩 KoraPuzzle Engine</h1>
+                <p>Rompecabezas de Arrastre Libre y Fluido</p>
             </header>
 
             <div class="menu-card">
                 <div class="form-group">
-                    <label for="game-mode">Modo de Juego:</label>
-                    <select id="game-mode">
-                        <option value="classic">Clásico (Jigsaw Escalable N x N)</option>
-                        <option value="modern">Moderno (Bloques Irregulares Tetris)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
                     <label for="grid-size">Dificultad (Piezas):</label>
                     <select id="grid-size">
-                        <option value="3">3 x 3 (9 Piezas)</option>
-                        <option value="4" selected>4 x 4 (16 Piezas)</option>
-                        <option value="5">5 x 5 (25 Piezas)</option>
-                        <option value="6">6 x 6 (36 Piezas - Experto)</option>
+                        <option value="3">3 x 3 (9 Piezas - Fácil)</option>
+                        <option value="4" selected>4 x 4 (16 Piezas - Normal)</option>
+                        <option value="5">5 x 5 (25 Piezas - Desafío)</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Imagen:</label>
+                    <label>Imagen del Puzzle:</label>
                     <input type="text" id="image-url" value="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800">
-                    <label for="local-image" class="btn-secondary" style="margin-top: 8px; display: block; text-align: center;">📁 Cargar del Teléfono</label>
+                    <label for="local-image" class="btn-secondary" style="margin-top: 8px; display: block; text-align: center;">📁 Cargar Foto del Celular</label>
                     <input type="file" id="local-image" accept="image/*" style="display: none;">
                 </div>
 
@@ -45,40 +36,40 @@
                     <img id="image-preview" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800" alt="Preview">
                 </div>
 
-                <button id="start-game-btn" class="btn-primary">¡Iniciar Partida!</button>
+                <button id="start-game-btn" class="btn-primary">¡Comenzar Partida!</button>
             </div>
         </section>
 
-        <!-- VISTA JUEGO -->
+        <!-- ÁREA DE JUEGO / LIENZO LIBRE -->
         <section id="view-game" class="screen hidden">
             <div class="game-header">
                 <button class="btn-back" id="back-to-menu-btn">⬅ Menú</button>
                 <div class="stats">
-                    <span>Listas: <strong id="score-count">0</strong>/<span id="total-target">16</span></span>
+                    <span>Armadas: <strong id="score-count">0</strong>/<span id="total-target">16</span></span>
                     <span>Tiempo: <strong id="timer">00:00</strong></span>
                 </div>
             </div>
 
-            <div class="game-workspace">
+            <div id="game-canvas" class="game-canvas">
+                <!-- Tablero de destino transparente o marcado -->
                 <div id="puzzle-board" class="puzzle-board"></div>
-                <div class="tray-title">Bandeja de Piezas:</div>
-                <div id="puzzle-tray" class="puzzle-tray"></div>
+                <!-- Área libre donde flotan las piezas al iniciar -->
+                <div id="pieces-container" class="pieces-container"></div>
             </div>
         </section>
     </div>
 
-    <!-- MODAL VICTORIA -->
+    <!-- MODAL DE VICTORIA -->
     <div id="win-modal" class="modal hidden">
         <div class="modal-content">
-            <h2>🎉 ¡Victoria!</h2>
+            <h2>🎉 ¡Increíble, Diego!</h2>
             <p>Rompecabezas completado con éxito.</p>
             <button class="btn-primary" id="play-again-btn">Jugar de Nuevo</button>
         </div>
     </div>
 
-    <!-- SCRIPTS MODULARIZADOS -->
+    <!-- SCRIPTS MODULARES -->
     <script src="js/core.js"></script>
-    <script src="js/puzzle-classic.js"></script>
-    <script src="js/puzzle-modern.js"></script>
+    <script src="js/puzzle-engine.js"></script>
 </body>
 </html>
