@@ -27,19 +27,13 @@ window.KoraCore = {
         });
 
         document.getElementById('start-game-btn').addEventListener('click', () => {
-            const mode = document.getElementById('game-mode').value;
             const size = parseInt(document.getElementById('grid-size').value, 10);
 
             document.getElementById('view-menu').classList.add('hidden');
             document.getElementById('view-game').classList.remove('hidden');
 
             this.startTimer();
-
-            if (mode === 'classic') {
-                window.KoraClassicPuzzle.init(this.selectedImageSrc, size);
-            } else {
-                window.KoraModernPuzzle.init(this.selectedImageSrc);
-            }
+            window.KoraPuzzleEngine.init(this.selectedImageSrc, size);
         });
 
         document.getElementById('back-to-menu-btn').addEventListener('click', () => this.resetToMenu());
