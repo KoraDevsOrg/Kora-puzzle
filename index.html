@@ -2,68 +2,96 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>KoraPuzzle Studio - Pro Engine</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KoraPuzzle Studio Pro</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div id="app">
-        <!-- MENÚ PRINCIPAL -->
+        <!-- VISTA 1: MENÚ PRINCIPAL -->
         <section id="view-menu" class="screen">
-            <header>
-                <h1>🧩 KoraPuzzle Pro</h1>
-                <p>Rompecabezas Real con Pestañas y Agrupamiento</p>
+            <header class="app-header">
+                <h1>🧩 KoraPuzzle Studio</h1>
+                <p>Motor Geométrico de Rompecabezas</p>
             </header>
 
             <div class="menu-card">
                 <div class="form-group">
-                    <label for="game-mode">Estilo de Rompecabezas:</label>
-                    <select id="game-mode">
-                        <option value="classic">Clásico (Jigsaw Curvo con Pestañas)</option>
-                        <option value="modern">Moderno (Bloques Tetris / Poliminós)</option>
-                    </select>
+                    <label>Modo de Juego:</label>
+                    <div class="mode-selector">
+                        <button type="button" class="mode-btn active" data-mode="classic">
+                            <strong>🧩 Clásico</strong>
+                            <span>Pestañas curvas entrelazadas</span>
+                        </button>
+                        <button type="button" class="mode-btn" data-mode="modern">
+                            <strong>🧱 Moderno (Poliminós)</strong>
+                            <span>Bloques asimétricos tipo Tetris</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="grid-size">Cantidad de Piezas (Dificultad):</label>
-                    <select id="grid-size">
-                        <option value="3">3 x 3 (9 Piezas - Fácil)</option>
-                        <option value="4" selected>4 x 4 (16 Piezas - Normal)</option>
-                        <option value="5">5 x 5 (25 Piezas - Desafío)</option>
-                        <option value="6">6 x 6 (36 Piezas - Experto)</option>
-                    </select>
+                    <div class="slider-header">
+                        <label for="grid-slider">Tamaño de Cuadrícula:</label>
+                        <span id="grid-label" class="badge">4 x 4 (16 piezas)</span>
+                    </div>
+                    <input type="range" id="grid-slider" min="2" max="10" value="4" step="1">
+                    <div class="slider-ticks">
+                        <span>4 pzs</span>
+                        <span>16 pzs</span>
+                        <span>36 pzs</span>
+                        <span>64 pzs</span>
+                        <span>100 pzs</span>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Imagen del Puzzle:</label>
-                    <input type="text" id="image-url" value="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800">
-                    <label for="local-image" class="btn-secondary" style="margin-top: 8px; display: block; text-align: center;">📁 Cargar Foto del Celular</label>
-                    <input type="file" id="local-image" accept="image/*" style="display: none;">
+                    <label>Imagen del Rompecabezas:</label>
+                    <div class="preset-gallery">
+                        <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80" class="preset-thumb active" alt="Preset 1" crossorigin="anonymous">
+                        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&q=80" class="preset-thumb" alt="Preset 2" crossorigin="anonymous">
+                        <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80" class="preset-thumb" alt="Preset 3" crossorigin="anonymous">
+                        <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&q=80" class="preset-thumb" alt="Preset 4" crossorigin="anonymous">
+                    </div>
+                    <div class="input-row">
+                        <input type="url" id="image-url" placeholder="O pega una URL pública de imagen..." value="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80">
+                        <label for="local-image" class="btn-upload">📁 Galería</label>
+                        <input type="file" id="local-image" accept="image/*" hidden>
+                    </div>
                 </div>
 
-                <div class="preview-container">
-                    <img id="image-preview" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800" alt="Preview">
+                <div class="preview-box">
+                    <img id="image-preview" src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80" alt="Vista previa" crossorigin="anonymous">
                 </div>
 
-                <button id="start-game-btn" class="btn-primary">¡Comenzar Partida!</button>
+                <button id="start-game-btn" class="btn-primary">¡Comenzar a Armar!</button>
             </div>
         </section>
 
-        <!-- ÁREA DE JUEGO / LIENZO LIBRE -->
+        <!-- VISTA 2: MESA DE JUEGO -->
         <section id="view-game" class="screen hidden">
-            <div class="game-header">
-                <button class="btn-back" id="back-to-menu-btn">⬅ Menú</button>
-                <div class="stats">
-                    <span>Armadas: <strong id="score-count">0</strong>/<span id="total-target">16</span></span>
-                    <span>Tiempo: <strong id="timer">00:00</strong></span>
+            <div class="game-topbar">
+                <button class="btn-icon" id="back-to-menu-btn">⬅ Menú</button>
+                <div class="stats-pill">
+                    <span>🧩 <strong id="score-count">0</strong>/<span id="total-target">16</span></span>
+                    <span>⏱️ <strong id="timer">00:00</strong></span>
+                </div>
+                <div class="topbar-actions">
+                    <button class="btn-icon" id="toggle-guide-btn" title="Ver guía de fondo">👁️ Guía</button>
+                    <button class="btn-icon" id="scatter-btn" title="Reorganizar piezas sueltas">🔀 Ordenar</button>
                 </div>
             </div>
 
-            <div id="game-canvas" class="game-canvas">
-                <!-- Tablero de destino transparente -->
-                <div id="puzzle-board" class="puzzle-board"></div>
-                <!-- Área libre donde flotan las piezas -->
-                <div id="pieces-container" class="pieces-container"></div>
+            <!-- LIENZO DE TRABAJO LIBRE (TABLERO + MESA DE ARMADO) -->
+            <div id="workspace" class="workspace">
+                <div id="puzzle-board" class="puzzle-board">
+                    <img id="board-guide" class="board-guide" alt="Guía">
+                    <canvas id="board-grid-canvas" class="board-grid-canvas"></canvas>
+                </div>
+                <div id="tray-zone" class="tray-zone">
+                    <span class="tray-watermark">Zona de piezas sueltas (Une piezas entre sí o llévalas al tablero)</span>
+                </div>
+                <div id="pieces-layer" class="pieces-layer"></div>
             </div>
         </section>
     </div>
@@ -71,14 +99,17 @@
     <!-- MODAL DE VICTORIA -->
     <div id="win-modal" class="modal hidden">
         <div class="modal-content">
-            <h2>🎉 ¡Excelente, Diego!</h2>
-            <p>Rompecabezas completado con éxito.</p>
-            <button class="btn-primary" id="play-again-btn">Jugar de Nuevo</button>
+            <div class="win-badge">🏆</div>
+            <h2>¡Rompecabezas Completado!</h2>
+            <p id="win-stats-text">Tiempo: 00:00</p>
+            <button class="btn-primary" id="play-again-btn">Jugar Otra Partida</button>
         </div>
     </div>
 
-    <!-- SCRIPTS MODULARES -->
+    <!-- ARQUITECTURA DESACOPLADA DE SCRIPTS -->
     <script src="js/core.js"></script>
-    <script src="js/puzzle-engine.js"></script>
+    <script src="js/drag-engine.js"></script>
+    <script src="js/puzzle-classic.js"></script>
+    <script src="js/puzzle-modern.js"></script>
 </body>
 </html>
