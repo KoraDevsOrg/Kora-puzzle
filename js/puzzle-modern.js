@@ -1,9 +1,12 @@
 window.KoraModernPuzzle = {
+    selectedPieceId: null,
+
     init(imgSrc) {
         const board = document.getElementById('puzzle-board');
         const tray = document.getElementById('puzzle-tray');
         board.innerHTML = '';
         tray.innerHTML = '';
+        this.selectedPieceId = null;
 
         const totalPieces = 4;
         let placedCount = 0;
@@ -14,10 +17,10 @@ window.KoraModernPuzzle = {
         board.style.gridTemplateRows = `repeat(4, 1fr)`;
 
         let tetrisPieces = [
-            { id: 0, shape: 'L', r: 0, c: 0, rs: 2, cs: 2, w: 130, h: 130 },
-            { id: 1, shape: 'T', r: 0, c: 2, rs: 2, cs: 2, w: 130, h: 130 },
-            { id: 2, shape: 'Z', r: 2, c: 0, rs: 2, cs: 2, w: 130, h: 130 },
-            { id: 3, shape: 'I', r: 2, c: 2, rs: 2, cs: 2, w: 130, h: 130 }
+            { id: 0, shape: 'L', r: 0, c: 0, rs: 2, cs: 2, w: 120, h: 120 },
+            { id: 1, shape: 'T', r: 0, c: 2, rs: 2, cs: 2, w: 120, h: 120 },
+            { id: 2, shape: 'Z', r: 2, c: 0, rs: 2, cs: 2, w: 120, h: 120 },
+            { id: 3, shape: 'I', r: 2, c: 2, rs: 2, cs: 2, w: 120, h: 120 }
         ];
 
         let shuffled = [...tetrisPieces].sort(() => Math.random() - 0.5);
@@ -28,6 +31,31 @@ window.KoraModernPuzzle = {
             cell.dataset.targetId = tp.id;
             cell.style.gridRow = `${tp.r + 1} / span ${tp.rs}`;
             cell.style.gridColumn = `${tp.c + 1} / span ${tp.cs}`;
+
+            cell.addEventListener('click', () => {
+                if (this.selectedPieceId !== null && cell.children.length === 0) {
+                    const targetId = parseInt(cell.dataset.targetId, 10);
+                    if (this.selectedPieceId === targetId) {
+                        const pieceEl = document.querySelector(`[data-piece-id='${this.selectedPieceId}']`);
+                        if (pieceEl) {
+                            cell.appendChild(pieceEl);
+                            pieceEl.classList.remove('selected');
+                            pieceEl.style.width = '100%';
+                            pieceEl.style.height = '100%';
+                            pieceEl.style.position = 'static';
+                            pieceEl.style.boxShadow = 'none';
+                            this.selectedPieceId = null;
+                            placedCount++;
+                            document.getElementById('score-count').textContent = placedCount;
+
+                            if (placedCount === totalPieces) {
+                                window.KoraCore.triggerWin();
+                            }
+                        }
+                    }
+                }
+            });
+
             board.appendChild(cell);
         });
 
@@ -35,7 +63,6 @@ window.KoraModernPuzzle = {
             const piece = document.createElement('div');
             piece.className = 'puzzle-piece';
             piece.dataset.pieceId = tp.id;
-            piece.draggable = true;
             piece.style.width = `${tp.w}px`;
             piece.style.height = `${tp.h}px`;
 
@@ -47,38 +74,18 @@ window.KoraModernPuzzle = {
             piece.style.backgroundPosition = `${bgX}% ${bgY}%`;
             piece.style.clipPath = this.getClipPath(tp.shape);
 
-            piece.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', tp.id);
+            piece.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.puzzle-piece').forEach(p => p.classList.remove('selected'));
+                if (this.selectedPieceId === tp.id) {
+                    this.selectedPieceId = null;
+                } else {
+                    this.selectedPieceId = tp.id;
+                    piece.classList.add('selected');
+                }
             });
 
             tray.appendChild(piece);
-        });
-
-        document.querySelectorAll('.board-cell').forEach(cell => {
-            cell.addEventListener('dragover', (e) => e.preventDefault());
-            cell.addEventListener('drop', (e) => {
-                e.preventDefault();
-                const pieceId = parseInt(e.dataTransfer.getData('text/plain'), 10);
-                const targetId = parseInt(cell.dataset.targetId, 10);
-
-                if (pieceId === targetId && cell.children.length === 0) {
-                    const pieceEl = document.querySelector(`[data-piece-id='${pieceId}']`);
-                    if (pieceEl) {
-                        cell.appendChild(pieceEl);
-                        pieceEl.draggable = false;
-                        pieceEl.style.width = '100%';
-                        pieceEl.style.height = '100%';
-                        pieceEl.style.position = 'static';
-                        pieceEl.style.boxShadow = 'none';
-                        placedCount++;
-                        document.getElementById('score-count').textContent = placedCount;
-
-                        if (placedCount === totalPieces) {
-                            window.KoraCore.triggerWin();
-                        }
-                    }
-                }
-            });
         });
     },
 
