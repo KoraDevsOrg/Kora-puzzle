@@ -72,7 +72,7 @@ window.KoraModernPuzzle = {
             }
         }
 
-        // Si quedó alguna celda unitaria (1x1), fusionarla con un poliminó vecino para que todas sean formas compuestas
+        // Fusionar celdas unitarias (1x1) con un poliminó vecino para garantizar piezas compuestas
         for (let i = pieces.length - 1; i >= 0; i--) {
             if (pieces[i].cells.length === 1 && pieces.length > 1) {
                 const single = pieces[i].cells[0];
@@ -143,8 +143,7 @@ window.KoraModernPuzzle = {
         ctx.lineWidth = 1.5;
 
         pieces.forEach(poly => {
-            this.tracePolyominoOutline(ctx, poly, 0, 0, cellW, cellH);
-            ctx.stroke();
+            this.strokePolyominoPerimeter(ctx, poly, 0, 0, cellW, cellH);
         });
     },
 
@@ -159,10 +158,9 @@ window.KoraModernPuzzle = {
 
         const ctx = canvas.getContext('2d');
 
-        // Recortar la silueta exacta de la pieza tipo Tetris (L, T, Z, etc.)
+        // 1. Recortar área cerrada de las celdas que conforman el poliminó y pintar la imagen
         ctx.save();
-        this.tracePolyominoOutline(ctx, poly, poly.minR, poly.minC, cellW, cellH);
-        ctx.clip();
+        this.clipPolyominoCells(ctx, poly, poly.minR, poly.minC, cellW, cellH);
 
         const scaleX = img.width / (cellW * gridSize);
         const scaleY = img.height / (cellH * gridSize);
@@ -180,49 +178,44 @@ window.KoraModernPuzzle = {
         );
         ctx.restore();
 
-        // Dibujar el borde perimetral continuo de la pieza moderna
+        // 2. Trazar el borde exterior continuo de la pieza (estilo bloque moderno)
         ctx.save();
-        this.tracePolyominoOutline(ctx, poly, poly.minR, poly.minC, cellW, cellH);
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.stroke();
+        this.strokePolyominoPerimeter(ctx, poly, poly.minR, poly.minC, cellW, cellH);
         ctx.restore();
 
         return canvas;
     },
 
-    tracePolyominoOutline(ctx, poly, offsetR, offsetC, cellW, cellH) {
+    clipPolyominoCells(ctx, poly, offsetR, offsetC, cellW, cellH) {
+        ctx.beginPath();
+        poly.cells.forEach(({ r, c }) => {
+            const x = (c - offsetC) * cellW;
+            const y = (r - offsetR) * cellH;
+            // Solapamiento de 0.5px para evitar costuras transparentes entre celdas del mismo bloque
+            ctx.rect(x, y, cellW + 0.5, cellH + 0.5);
+        });
+        ctx.clip();
+    },
+
+    strokePolyominoPerimeter(ctx, poly, offsetR, offsetC, cellW, cellH) {
         const cellSet = new Set(poly.cells.map(c => `${c.r},${c.c}`));
         const has = (r, c) => cellSet.has(`${r},${c}`);
 
         ctx.beginPath();
-        // Trazar cada celda perteneciente al bloque y su perímetro exterior
-        poly.cells.forEach(({ r, c }) => {
-            const x = (c - offsetC) * cellW;
-            const y = (r - offsetR) * cellH;
-            ctx.rect(x, y, cellW, cellH);
-        });
-
-        // Guardar segmentos de borde exterior para que el stroke solo dibuje el contorno de la figura
-        ctx.beginPath();
         poly.cells.forEach(({ r, c }) => {
             const x = (c - offsetC) * cellW;
             const y = (r - offsetR) * cellH;
 
+            // Solo dibujar borde donde no haya otra celda del mismo poliminó adyacente
             if (!has(r - 1, c)) { ctx.moveTo(x, y); ctx.lineTo(x + cellW, y); }
             if (!has(r + 1, c)) { ctx.moveTo(x, y + cellH); ctx.lineTo(x + cellW, y + cellH); }
             if (!has(r, c - 1)) { ctx.moveTo(x, y); ctx.lineTo(x, y + cellH); }
             if (!has(r, c + 1)) { ctx.moveTo(x + cellW, y); ctx.lineTo(x + cellW, y + cellH); }
         });
-
-        // Si se usa para clip(), necesitamos las áreas cerradas; por ello definimos un método mixto:
-        const clipPath = new Path2D();
-        poly.cells.forEach(({ r, c }) => {
-            const x = (c - offsetC) * cellW;
-            const y = (r - offsetR) * cellH;
-            clipPath.rect(x, y, cellW + 0.5, cellH + 0.5);
-        });
-        ctx.clip(clipPath);
+        ctx.stroke();
     }
 };
