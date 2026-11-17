@@ -1,100 +1,228 @@
 window.KoraModernPuzzle = {
-    selectedPieceId: null,
+    build(img, gridSize) {
+        const boardW = window.KoraDragEngine.boardOffset.w;
+        const boardH = window.KoraDragEngine.boardOffset.h;
+        const cellW = boardW / gridSize;
+        const cellH = boardH / gridSize;
 
-    init(imgSrc) {
-        const board = document.getElementById('puzzle-board');
-        const tray = document.getElementById('puzzle-tray');
-        board.innerHTML = '';
-        tray.innerHTML = '';
-        this.selectedPieceId = null;
+        // Generar partición exacta del tablero en Poliminós (bloques de 2 a 4 celdas conectadas)
+        const polyominoes = this.generatePolyominoPartition(gridSize);
+        window.KoraDragEngine.reset(polyominoes.length);
 
-        const totalPieces = 4;
-        let placedCount = 0;
-        document.getElementById('total-target').textContent = totalPieces;
-        document.getElementById('score-count').textContent = placedCount;
+        this.drawPolyominoBoardGrid(boardW, boardH, cellW, cellH, polyominoes);
 
-        board.style.gridTemplateColumns = `repeat(4, 1fr)`;
-        board.style.gridTemplateRows = `repeat(4, 1fr)`;
+        // Calcular qué poliminós son vecinos entre sí para habilitar el imán fuera del tablero
+        this.computePolyominoNeighbors(polyominoes, gridSize);
 
-        let tetrisPieces = [
-            { id: 0, shape: 'L', r: 0, c: 0, rs: 2, cs: 2, w: 120, h: 120 },
-            { id: 1, shape: 'T', r: 0, c: 2, rs: 2, cs: 2, w: 120, h: 120 },
-            { id: 2, shape: 'Z', r: 2, c: 0, rs: 2, cs: 2, w: 120, h: 120 },
-            { id: 3, shape: 'I', r: 2, c: 2, rs: 2, cs: 2, w: 120, h: 120 }
-        ];
+        polyominoes.forEach(poly => {
+            const canvas = this.createPolyominoCanvas(img, poly, gridSize, cellW, cellH);
 
-        let shuffled = [...tetrisPieces].sort(() => Math.random() - 0.5);
+            window.KoraDragEngine.registerPiece({
+                id: poly.id,
+                el: canvas,
+                targetX: poly.minC * cellW,
+                targetY: poly.minR * cellH,
+                x: 0,
+                y: 0,
+                w: (poly.maxC - poly.minC + 1) * cellW,
+                h: (poly.maxR - poly.minR + 1) * cellH,
+                neighbors: poly.neighbors
+            });
+        });
 
-        tetrisPieces.forEach((tp) => {
-            const cell = document.createElement('div');
-            cell.className = 'board-cell';
-            cell.dataset.targetId = tp.id;
-            cell.style.gridRow = `${tp.r + 1} / span ${tp.rs}`;
-            cell.style.gridColumn = `${tp.c + 1} / span ${tp.cs}`;
+        window.KoraDragEngine.scatterLoosePieces();
+    },
 
-            cell.addEventListener('click', () => {
-                if (this.selectedPieceId !== null && cell.children.length === 0) {
-                    const targetId = parseInt(cell.dataset.targetId, 10);
-                    if (this.selectedPieceId === targetId) {
-                        const pieceEl = document.querySelector(`[data-piece-id='${this.selectedPieceId}']`);
-                        if (pieceEl) {
-                            cell.appendChild(pieceEl);
-                            pieceEl.classList.remove('selected');
-                            pieceEl.style.width = '100%';
-                            pieceEl.style.height = '100%';
-                            pieceEl.style.position = 'static';
-                            pieceEl.style.boxShadow = 'none';
-                            this.selectedPieceId = null;
-                            placedCount++;
-                            document.getElementById('score-count').textContent = placedCount;
+    generatePolyominoPartition(N) {
+        const owner = Array.from({ length: N }, () => Array(N).fill(-1));
+        const pieces = [];
+        const maxCellsPerPiece = N <= 3 ? 2 : (N <= 5 ? 3 : 4);
+        let currentId = 0;
 
-                            if (placedCount === totalPieces) {
-                                window.KoraCore.triggerWin();
+        const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+        for (let r = 0; r < N; r++) {
+            for (let c = 0; c < N; c++) {
+                if (owner[r][c] !== -1) continue;
+
+                const cells = [{ r, c }];
+                owner[r][c] = currentId;
+                const targetSize = Math.floor(Math.random() * (maxCellsPerPiece - 1)) + 2;
+
+                while (cells.length < targetSize) {
+                    const candidates = [];
+                    cells.forEach(cell => {
+                        dirs.forEach(([dr, dc]) => {
+                            const nr = cell.r + dr;
+                            const nc = cell.c + dc;
+                            if (nr >= 0 && nr < N && nc >= 0 && nc < N && owner[nr][nc] === -1) {
+                                candidates.push({ r: nr, c: nc });
+                            }
+                        });
+                    });
+
+                    if (candidates.length === 0) break;
+                    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+                    owner[pick.r][pick.c] = currentId;
+                    cells.push(pick);
+                }
+
+                pieces.push({ id: currentId, cells, neighbors: [] });
+                currentId++;
+            }
+        }
+
+        // Si quedó alguna celda unitaria (1x1), fusionarla con un poliminó vecino para que todas sean formas compuestas
+        for (let i = pieces.length - 1; i >= 0; i--) {
+            if (pieces[i].cells.length === 1 && pieces.length > 1) {
+                const single = pieces[i].cells[0];
+                for (const [dr, dc] of dirs) {
+                    const nr = single.r + dr;
+                    const nc = single.c + dc;
+                    if (nr >= 0 && nr < N && nc >= 0 && nc < N) {
+                        const neighborId = owner[nr][nc];
+                        if (neighborId !== pieces[i].id) {
+                            const targetPiece = pieces.find(p => p.id === neighborId);
+                            if (targetPiece) {
+                                owner[single.r][single.c] = targetPiece.id;
+                                targetPiece.cells.push(single);
+                                pieces.splice(i, 1);
+                                break;
                             }
                         }
                     }
                 }
-            });
+            }
+        }
 
-            board.appendChild(cell);
+        // Reindexar IDs y calcular cajas delimitadoras (Bounding Box)
+        pieces.forEach((p, idx) => {
+            p.id = idx;
+            p.minR = Math.min(...p.cells.map(ce => ce.r));
+            p.maxR = Math.max(...p.cells.map(ce => ce.r));
+            p.minC = Math.min(...p.cells.map(ce => ce.c));
+            p.maxC = Math.max(...p.cells.map(ce => ce.c));
         });
 
-        shuffled.forEach((tp) => {
-            const piece = document.createElement('div');
-            piece.className = 'puzzle-piece';
-            piece.dataset.pieceId = tp.id;
-            piece.style.width = `${tp.w}px`;
-            piece.style.height = `${tp.h}px`;
+        return pieces;
+    },
 
-            const bgX = (tp.c * 100) / 3;
-            const bgY = (tp.r * 100) / 3;
-
-            piece.style.backgroundImage = `url(${imgSrc})`;
-            piece.style.backgroundSize = `300% 300%`;
-            piece.style.backgroundPosition = `${bgX}% ${bgY}%`;
-            piece.style.clipPath = this.getClipPath(tp.shape);
-
-            piece.addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.querySelectorAll('.puzzle-piece').forEach(p => p.classList.remove('selected'));
-                if (this.selectedPieceId === tp.id) {
-                    this.selectedPieceId = null;
-                } else {
-                    this.selectedPieceId = tp.id;
-                    piece.classList.add('selected');
-                }
+    computePolyominoNeighbors(pieces, N) {
+        const gridMap = Array.from({ length: N }, () => Array(N).fill(-1));
+        pieces.forEach(p => {
+            p.cells.forEach(cell => {
+                gridMap[cell.r][cell.c] = p.id;
             });
+        });
 
-            tray.appendChild(piece);
+        const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+        pieces.forEach(p => {
+            const nSet = new Set();
+            p.cells.forEach(cell => {
+                dirs.forEach(([dr, dc]) => {
+                    const nr = cell.r + dr;
+                    const nc = cell.c + dc;
+                    if (nr >= 0 && nr < N && nc >= 0 && nc < N) {
+                        const otherId = gridMap[nr][nc];
+                        if (otherId !== p.id) nSet.add(otherId);
+                    }
+                });
+            });
+            p.neighbors = Array.from(nSet);
         });
     },
 
-    getClipPath(shape) {
-        switch(shape) {
-            case 'L': return 'polygon(0% 0%, 50% 0%, 50% 50%, 100% 50%, 100% 100%, 0% 100%)';
-            case 'T': return 'polygon(0% 0%, 100% 0%, 100% 50%, 75% 50%, 75% 100%, 25% 100%, 25% 50%, 0% 50%)';
-            case 'Z': return 'polygon(0% 0%, 50% 0%, 50% 50%, 100% 50%, 100% 100%, 50% 100%, 50% 50%, 0% 50%)';
-            default: return 'polygon(0% 25%, 100% 25%, 100% 75%, 0% 75%)';
-        }
+    drawPolyominoBoardGrid(boardW, boardH, cellW, cellH, pieces) {
+        const gridCanvas = document.getElementById('board-grid-canvas');
+        gridCanvas.width = boardW;
+        gridCanvas.height = boardH;
+        const ctx = gridCanvas.getContext('2d');
+        ctx.clearRect(0, 0, boardW, boardH);
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = 1.5;
+
+        pieces.forEach(poly => {
+            this.tracePolyominoOutline(ctx, poly, 0, 0, cellW, cellH);
+            ctx.stroke();
+        });
+    },
+
+    createPolyominoCanvas(img, poly, gridSize, cellW, cellH) {
+        const spanCols = poly.maxC - poly.minC + 1;
+        const spanRows = poly.maxR - poly.minR + 1;
+
+        const canvas = document.createElement('canvas');
+        canvas.className = 'puzzle-piece';
+        canvas.width = Math.ceil(spanCols * cellW);
+        canvas.height = Math.ceil(spanRows * cellH);
+
+        const ctx = canvas.getContext('2d');
+
+        // Recortar la silueta exacta de la pieza tipo Tetris (L, T, Z, etc.)
+        ctx.save();
+        this.tracePolyominoOutline(ctx, poly, poly.minR, poly.minC, cellW, cellH);
+        ctx.clip();
+
+        const scaleX = img.width / (cellW * gridSize);
+        const scaleY = img.height / (cellH * gridSize);
+
+        ctx.drawImage(
+            img,
+            poly.minC * cellW * scaleX,
+            poly.minR * cellH * scaleY,
+            spanCols * cellW * scaleX,
+            spanRows * cellH * scaleY,
+            0,
+            0,
+            spanCols * cellW,
+            spanRows * cellH
+        );
+        ctx.restore();
+
+        // Dibujar el borde perimetral continuo de la pieza moderna
+        ctx.save();
+        this.tracePolyominoOutline(ctx, poly, poly.minR, poly.minC, cellW, cellH);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+        ctx.restore();
+
+        return canvas;
+    },
+
+    tracePolyominoOutline(ctx, poly, offsetR, offsetC, cellW, cellH) {
+        const cellSet = new Set(poly.cells.map(c => `${c.r},${c.c}`));
+        const has = (r, c) => cellSet.has(`${r},${c}`);
+
+        ctx.beginPath();
+        // Trazar cada celda perteneciente al bloque y su perímetro exterior
+        poly.cells.forEach(({ r, c }) => {
+            const x = (c - offsetC) * cellW;
+            const y = (r - offsetR) * cellH;
+            ctx.rect(x, y, cellW, cellH);
+        });
+
+        // Guardar segmentos de borde exterior para que el stroke solo dibuje el contorno de la figura
+        ctx.beginPath();
+        poly.cells.forEach(({ r, c }) => {
+            const x = (c - offsetC) * cellW;
+            const y = (r - offsetR) * cellH;
+
+            if (!has(r - 1, c)) { ctx.moveTo(x, y); ctx.lineTo(x + cellW, y); }
+            if (!has(r + 1, c)) { ctx.moveTo(x, y + cellH); ctx.lineTo(x + cellW, y + cellH); }
+            if (!has(r, c - 1)) { ctx.moveTo(x, y); ctx.lineTo(x, y + cellH); }
+            if (!has(r, c + 1)) { ctx.moveTo(x + cellW, y); ctx.lineTo(x + cellW, y + cellH); }
+        });
+
+        // Si se usa para clip(), necesitamos las áreas cerradas; por ello definimos un método mixto:
+        const clipPath = new Path2D();
+        poly.cells.forEach(({ r, c }) => {
+            const x = (c - offsetC) * cellW;
+            const y = (r - offsetR) * cellH;
+            clipPath.rect(x, y, cellW + 0.5, cellH + 0.5);
+        });
+        ctx.clip(clipPath);
     }
 };
